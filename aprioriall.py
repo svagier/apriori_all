@@ -79,6 +79,16 @@ def get_occurrences_of_sequence(original_dataset: [], checked_sequence: ()) -> [
                     break
     return occurrences
 
+def get_transformed_frequent_sets(frequent_datasets: []) -> []:
+    transformed = []
+    mapping_id = 1
+    for frequent_set in frequent_datasets:
+        for frequent_sequence in frequent_set:
+            # (sequence, support, mapping_id)
+            transformed.append((frequent_sequence[0], frequent_sequence[1], mapping_id))
+            mapping_id += 1
+    return transformed
+
 
 def main():
     """ dataset's elements are tuples, where first index of tuple is id of subject (e.g. id of client), and second index
@@ -102,6 +112,12 @@ def main():
     print(fs_1)
     cs_2 = create_candidate_set(dataset, fs_1, 2)
     print(cs_2)
+    fs_2 = get_frequent_set(cs_2, min_sup)
+    print(fs_2)
+    all_frequent_sets = [fs_1, fs_2]
+    transformed_sets = get_transformed_frequent_sets(all_frequent_sets)
+    print(transformed_sets)
+
 
 if __name__ == '__main__':
     main()
