@@ -1,3 +1,5 @@
+from itertools import combinations
+
 def conver_init_dataset_dict_to_list(initial_dataset_dict: {}) -> []:
     list_dataset = []
     for sublist in initial_dataset_dict.keys():
@@ -43,6 +45,40 @@ def get_frequent_set(candidate_sets: [], min_support: int) -> {}:
     return frequent_sets
 
 
+def get_elements_in_order(input_set: []) -> []:
+    list_of_elements = []
+    for element in input_set:
+        list_of_elements.append(element[0])
+    return list_of_elements
+
+
+def create_candidate_set(original_dataset: [], freqeunt_sets: [], cs_seq_size: int):
+    list_of_elements = get_elements_in_order(freqeunt_sets)
+    all_combinations = combinations(list_of_elements, cs_seq_size)
+    candidate_set = []
+    number_of_subjects = len(original_dataset)
+    for elem in list(all_combinations):
+        occurrences = get_occurrences_of_sequence(original_dataset, elem)
+        candidate_set.append((elem, occurrences/number_of_subjects))
+    return candidate_set
+
+
+def get_occurrences_of_sequence(original_dataset: [], checked_sequence: ()) -> []:
+    len_checked_sequence = len(checked_sequence)
+    occurrences = 0
+    for subject_data in original_dataset:
+        sequences = subject_data[1]
+        for seq in sequences:
+            if len(seq) >= len_checked_sequence:
+                index = 0
+                for element in seq:
+                    if element == checked_sequence[index]:
+                        index += 1
+                if index == len_checked_sequence:       # the sequence has been found
+                    occurrences += 1
+                    break
+    return occurrences
+
 
 def main():
     """ dataset's elements are tuples, where first index of tuple is id of subject (e.g. id of client), and second index
@@ -62,8 +98,10 @@ def main():
 
     initial_candidate_set = get_initial_cs(dataset)
     print(initial_candidate_set)
-    print(get_frequent_set(initial_candidate_set, min_sup))
-
+    fs_1 = get_frequent_set(initial_candidate_set, min_sup)
+    print(fs_1)
+    cs_2 = create_candidate_set(dataset, fs_1, 2)
+    print(cs_2)
 
 if __name__ == '__main__':
     main()
