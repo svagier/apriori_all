@@ -1,13 +1,6 @@
 from itertools import combinations, product
 
 
-def conver_init_dataset_dict_to_list(initial_dataset_dict: {}) -> []:
-    list_dataset = []
-    for sublist in initial_dataset_dict.keys():
-        list_dataset.append(sublist)
-    return list_dataset
-
-
 def get_cs_with_support_from_occurrences(candidate_set_list: [], number_of_subjects: int) -> []:       # 'cs' stands for 'candidate set'
     candidate_set_with_support = []
     for cs_tuple in candidate_set_list:
