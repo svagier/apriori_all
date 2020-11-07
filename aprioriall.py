@@ -1,5 +1,6 @@
 from itertools import combinations
 
+
 def conver_init_dataset_dict_to_list(initial_dataset_dict: {}) -> []:
     list_dataset = []
     for sublist in initial_dataset_dict.keys():
@@ -101,41 +102,25 @@ def map_frequent_sets(frequent_datasets: []) -> []:
 
 
 def get_transformed_original_dataset(dataset: [], mapped_frequent_sets: []) -> []:
-    print('\n-------- in get_transformed_original_dataset')
-    # print('mapped:', mapped_frequent_sets)
     transformed = []
     for record in dataset:
         transactions = record[1]
-        # print('transsactions:', transactions)
         all_transaction_combinations = []
         for sequence in transactions:
-            sequence_list = [x for x, in sequence]       # comma removed "for x,"
+            sequence_list = [x for x, in sequence]
             sequence_combinations = []
             for x in range(1, len(sequence_list) + 1):
                 sequence_combinations += list(combinations(sequence_list, x))
             all_transaction_combinations.append(sequence_combinations)
-            # print("sequence list", sequence_list)
-            # print("sequence_combinations", sequence_combinations)
-            # print("all_transaction_combinations", all_transaction_combinations)
-        # print(all_transaction_combinations)
-        # print(transactions)
-        # print("mapped transhgormed:", )
-        # print('---------')
         transformed.append(map_transformed_sequence(all_transaction_combinations, mapped_frequent_sets))
     return transformed
 
 
 def map_transformed_sequence(potential_sequences: [], mapped_frequent_sequences: []) -> []:
-    # frequent_sequences = [elem[0] for elem in mapped_frequent_sequences]
-    print("******* In map_transformed_sequence******")
-    print("potential_sequences", potential_sequences)
-    print("mapped_frequent_sequences", mapped_frequent_sequences)
     final_sequences = []
     for list_of_sequences in potential_sequences:
-        print('list_of_sequences', list_of_sequences)
         transformed_sequence = ()
         for seq in list_of_sequences:
-            print('seq', seq)
             for elem in mapped_frequent_sequences:
                 if elem[0] == seq:
                     transformed_sequence += (elem[2],)
