@@ -203,20 +203,32 @@ def sequencing_create_candidate_set(transformed_original_dataset: [], previous_f
     return sequencing_cs_with_sup
 
 
+def print_line_by_line(list_to_be_printed: []):
+    if len(list_to_be_printed):
+        for line in list_to_be_printed:
+            print(line)
+    else:
+        print("Empty")
+
+
 def apriori_all(dataset: [], min_sup: float):
-    print("Original dataset:\n", dataset)
+    print("Original dataset:")
+    print_line_by_line(dataset)
     candidate_set = get_initial_cs(dataset)
+    print("\nInitial candidate set 1 (with support):")
+    print_line_by_line(candidate_set)
     all_frequent_sets = []
-    print("\nInitial candidate set (with support):\n", candidate_set)
     counter = 1
     while len(candidate_set):
         frequent_set = get_frequent_set(candidate_set, min_sup)
-        print("\nFrequent set {} (with support):\n".format(counter), frequent_set)
+        print("\nFrequent set {} (with support):".format(counter))
+        print_line_by_line(frequent_set)
         if len(frequent_set):
             all_frequent_sets.append(frequent_set)
             counter += 1
             candidate_set = create_candidate_set(dataset, frequent_set, counter)
-            print("\nCandidate set {} (with support):\n".format(counter), candidate_set)
+            print("\nCandidate set {} (with support):".format(counter))
+            print_line_by_line(candidate_set)
             if not len(candidate_set):
                 counter -= 1        # this may happen only once
         else:
@@ -224,22 +236,26 @@ def apriori_all(dataset: [], min_sup: float):
 
     # Mapping:
     mapped_frequent_sets = map_frequent_sets(all_frequent_sets)
-    print("\nMapped frequent sets (with support and new mapped value):\n", mapped_frequent_sets)
+    print("\nMapped frequent sets (with support and new mapped value):")
+    print_line_by_line(mapped_frequent_sets)
 
     # Transforming:
     transformed_original_dataset = get_transformed_original_dataset(dataset, mapped_frequent_sets)
-    print("\nTransformed original dataset:\n", transformed_original_dataset)
+    print("\nTransformed original dataset:")
+    print_line_by_line(transformed_original_dataset)
 
     # Sequencing:
     sequencing_candidate_set = sequencing_create_initial_candidate_set(transformed_original_dataset, mapped_frequent_sets, counter)
     sequencing_frequent_set = ['initial_value (will be overwritten during first iteration']
     while len(sequencing_candidate_set) and len(sequencing_frequent_set):
         sequencing_frequent_set = sequencing_get_frequent_set(sequencing_candidate_set, min_sup)
-        print("\nSequenced frequent set {} (with support):\n".format(counter), sequencing_frequent_set)
+        print("\nSequenced frequent set {} (with support):".format(counter))
+        print_line_by_line(sequencing_frequent_set)
         if len(sequencing_frequent_set):
             counter += 1
             sequencing_candidate_set = sequencing_create_candidate_set(transformed_original_dataset, sequencing_frequent_set, 3)
-            print("\nSequenced candidate set {} (with support):\n".format(counter), sequencing_candidate_set)
+            print("\nSequenced candidate set {} (with support):".format(counter))
+            print_line_by_line(sequencing_candidate_set)
             if not len(sequencing_candidate_set):
                 print("------ Sequenced candidate set {} is empty. Algorithm is ending. ------".format(counter))
                 return
