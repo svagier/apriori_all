@@ -37,7 +37,7 @@ def get_initial_cs(dataset: []) -> []:                                   # 'cs' 
     return get_cs_with_support_from_occurrences(candidate_set, number_of_subjects)
 
 
-def get_frequent_set(candidate_sets: [], min_support: int) -> {}:
+def get_frequent_set(candidate_sets: [], min_support: float) -> {}:
     frequent_sets = []
     for cs in candidate_sets:
         if cs[1] >= min_support:
@@ -101,31 +101,46 @@ def map_frequent_sets(frequent_datasets: []) -> []:
 
 
 def get_transformed_original_dataset(dataset: [], mapped_frequent_sets: []) -> []:
-    print('mapped:', mapped_frequent_sets)
+    print('\n-------- in get_transformed_original_dataset')
+    # print('mapped:', mapped_frequent_sets)
     transformed = []
     for record in dataset:
         transactions = record[1]
         # print('transsactions:', transactions)
         all_transaction_combinations = []
         for sequence in transactions:
-            mapped_sequence = []
             sequence_list = [x for x, in sequence]       # comma removed "for x,"
+            sequence_combinations = []
             for x in range(1, len(sequence_list) + 1):
-                all_transaction_combinations += list(combinations(sequence_list, x))
+                sequence_combinations += list(combinations(sequence_list, x))
+            all_transaction_combinations.append(sequence_combinations)
+            # print("sequence list", sequence_list)
+            # print("sequence_combinations", sequence_combinations)
+            # print("all_transaction_combinations", all_transaction_combinations)
         # print(all_transaction_combinations)
-        print(transactions)
-        print("mapped transhgormed:", map_transformed_sequence(all_transaction_combinations, mapped_frequent_sets))
-        print('---------')
+        # print(transactions)
+        # print("mapped transhgormed:", )
+        # print('---------')
+        transformed.append(map_transformed_sequence(all_transaction_combinations, mapped_frequent_sets))
     return transformed
 
 
 def map_transformed_sequence(potential_sequences: [], mapped_frequent_sequences: []) -> []:
-    frequent_sequences = [elem[0] for elem in mapped_frequent_sequences]
+    # frequent_sequences = [elem[0] for elem in mapped_frequent_sequences]
+    print("******* In map_transformed_sequence******")
+    print("potential_sequences", potential_sequences)
+    print("mapped_frequent_sequences", mapped_frequent_sequences)
     final_sequences = []
-    for seq in potential_sequences:
-        for elem in mapped_frequent_sequences:
-            if elem[0] == seq:
-                final_sequences.append(elem[2])
+    for list_of_sequences in potential_sequences:
+        print('list_of_sequences', list_of_sequences)
+        transformed_sequence = ()
+        for seq in list_of_sequences:
+            print('seq', seq)
+            for elem in mapped_frequent_sequences:
+                if elem[0] == seq:
+                    transformed_sequence += (elem[2],)
+        if len(transformed_sequence):
+            final_sequences.append(transformed_sequence)
     return final_sequences
 
 
@@ -164,10 +179,10 @@ def main():
     fs_2 = get_frequent_set(cs_2, min_sup)
     print("\nFrequent set 2: ", fs_2)
     all_frequent_sets = [fs_1, fs_2]
-    transformed_sets = map_frequent_sets(all_frequent_sets)
-    print("Transformed sets", transformed_sets)
-
-    print(get_transformed_original_dataset(dataset, transformed_sets))
+    mapped_frequent_sets = map_frequent_sets(all_frequent_sets)
+    print("Mapped frequent sets", mapped_frequent_sets)
+    transformed_original_dataset = get_transformed_original_dataset(dataset, mapped_frequent_sets)
+    print("Transformed original dataset:", transformed_original_dataset)
 
 
 if __name__ == '__main__':
