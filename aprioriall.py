@@ -27,7 +27,7 @@ def get_initial_cs(dataset: []) -> []:                                   # 'cs' 
                 if tuple_elem not in unique_sequence_elements.keys():
                     unique_sequence_elements[tuple_elem] = unique_element_index
                     unique_element_index += 1
-                    element_with_list_of_occurrences = (tuple_elem, [subject_id])
+                    element_with_list_of_occurrences = ((tuple_elem,), [subject_id])
                     candidate_set.append(element_with_list_of_occurrences)
                 else:
                     index = unique_sequence_elements[tuple_elem]
@@ -57,10 +57,19 @@ def create_candidate_set(original_dataset: [], freqeunt_sets: [], cs_seq_size: i
     all_combinations = combinations(list_of_elements, cs_seq_size)
     candidate_set = []
     number_of_subjects = len(original_dataset)
-    for elem in list(all_combinations):
-        occurrences = get_occurrences_of_sequence(original_dataset, elem)
-        candidate_set.append((elem, occurrences/number_of_subjects))
+    all_comb = list(all_combinations)
+    for elem in all_comb:
+        candidate = concat_tuples(elem)
+        occurrences = get_occurrences_of_sequence(original_dataset, candidate)
+        candidate_set.append((candidate, occurrences/number_of_subjects))
     return candidate_set
+
+
+def concat_tuples(all_tuples: tuple) -> tuple:
+    new_tuple = ()
+    for elem in all_tuples:
+        new_tuple += elem
+    return new_tuple
 
 
 def get_occurrences_of_sequence(original_dataset: [], checked_sequence: ()) -> []:
@@ -79,15 +88,45 @@ def get_occurrences_of_sequence(original_dataset: [], checked_sequence: ()) -> [
                     break
     return occurrences
 
-def get_transformed_frequent_sets(frequent_datasets: []) -> []:
-    transformed = []
+
+def map_frequent_sets(frequent_datasets: []) -> []:
+    mapped = []
     mapping_id = 1
     for frequent_set in frequent_datasets:
         for frequent_sequence in frequent_set:
             # (sequence, support, mapping_id)
-            transformed.append((frequent_sequence[0], frequent_sequence[1], mapping_id))
+            mapped.append((frequent_sequence[0], frequent_sequence[1], mapping_id))
             mapping_id += 1
+    return mapped
+
+
+def get_transformed_original_dataset(dataset: [], mapped_frequent_sets: []) -> []:
+    print('mapped:', mapped_frequent_sets)
+    transformed = []
+    for record in dataset:
+        transactions = record[1]
+        # print('transsactions:', transactions)
+        all_transaction_combinations = []
+        for sequence in transactions:
+            mapped_sequence = []
+            sequence_list = [x for x, in sequence]       # comma removed "for x,"
+            for x in range(1, len(sequence_list) + 1):
+                all_transaction_combinations += list(combinations(sequence_list, x))
+        # print(all_transaction_combinations)
+        print(transactions)
+        print("mapped transhgormed:", map_transformed_sequence(all_transaction_combinations, mapped_frequent_sets))
+        print('---------')
     return transformed
+
+
+def map_transformed_sequence(potential_sequences: [], mapped_frequent_sequences: []) -> []:
+    frequent_sequences = [elem[0] for elem in mapped_frequent_sequences]
+    final_sequences = []
+    for seq in potential_sequences:
+        for elem in mapped_frequent_sequences:
+            if elem[0] == seq:
+                final_sequences.append(elem[2])
+    return final_sequences
 
 
 def main():
@@ -104,19 +143,31 @@ def main():
                 ("5", [('A',)])
     ]
 
+    # dataset = [
+    #     ("105", [(30,), (90,)]),
+    #     ("106", [(10, 20), (30,), (40, 60, 70)]),
+    #     ("200", [(30, 50, 70)]),
+    #     ("220", [(30,), (40, 60), (90,)]),
+    #     ("300", [(90,)]),
+    # ]
+
     min_sup = 0.25
 
+    print("Original dataset:\n", dataset)
+
     initial_candidate_set = get_initial_cs(dataset)
-    print(initial_candidate_set)
+    print("\nInitial candidate set:", initial_candidate_set)
     fs_1 = get_frequent_set(initial_candidate_set, min_sup)
-    print(fs_1)
+    print("\nFrequent set 1: ", fs_1)
     cs_2 = create_candidate_set(dataset, fs_1, 2)
-    print(cs_2)
+    print("\nCandidate set 2: ", cs_2)
     fs_2 = get_frequent_set(cs_2, min_sup)
-    print(fs_2)
+    print("\nFrequent set 2: ", fs_2)
     all_frequent_sets = [fs_1, fs_2]
-    transformed_sets = get_transformed_frequent_sets(all_frequent_sets)
-    print(transformed_sets)
+    transformed_sets = map_frequent_sets(all_frequent_sets)
+    print("Transformed sets", transformed_sets)
+
+    print(get_transformed_original_dataset(dataset, transformed_sets))
 
 
 if __name__ == '__main__':
