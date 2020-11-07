@@ -129,24 +129,17 @@ def map_transformed_sequence(potential_sequences: [], mapped_frequent_sequences:
     return final_sequences
 
 
-def sequencing_create_candidate_set(transformed_original_dataset:[], mapped_frequent_sequences: [], cs_seq_size: int) -> []:
+def sequencing_create_initial_candidate_set(transformed_original_dataset: [], mapped_frequent_sequences: [], cs_seq_size: int) -> []:
     frequent_sequences_list = [x[2] for x in mapped_frequent_sequences]
-    print("frequent_sequences_list", frequent_sequences_list)
     all_combinations_with_repeat = list(product(frequent_sequences_list, repeat=cs_seq_size))
-    print("All combinations with repeat", all_combinations_with_repeat)
-    print("transformed roiginal", transformed_original_dataset)
     sequencing_cs = []
     number_of_subjects = len(transformed_original_dataset)
     for combination in all_combinations_with_repeat:
-        print("--------- checked ombination -----", combination)
         number_of_occurrences = 0
         for record in transformed_original_dataset:
             index = 0
-            print("record", record)
             for sequence in record:
-                print("sequence", sequence)
                 for elem in sequence:
-                    print("elem:", elem)
                     if combination[index] == elem:
                         index += 1
                         break
@@ -155,6 +148,63 @@ def sequencing_create_candidate_set(transformed_original_dataset:[], mapped_freq
                     break
         sequencing_cs.append((combination, number_of_occurrences/number_of_subjects))
     return sequencing_cs
+
+
+def sequencing_get_frequent_set(sequencing_candidate_set: [], min_support: float) -> []:
+    sequencing_fs = []
+    for sequence_tuple in sequencing_candidate_set:
+        if sequence_tuple[1] >= min_support:
+            sequencing_fs.append(sequence_tuple)
+    return sequencing_fs
+
+
+def sequencing_create_candidate_set(transformed_original_dataset: [], previous_frequent_set: [], cs_seq_size: int) -> []:
+    print("previous_frequent_set",previous_frequent_set)
+    # get unique values from last positions from sequences in previous_frequent_set:
+    last_position_values = []
+    previous_frequent_set_sequences = []
+    for seq in previous_frequent_set:
+        previous_frequent_set_sequences.append(seq[0])
+        if seq[0][cs_seq_size-2] not in last_position_values:
+            last_position_values.append((seq[0][-1],))
+    print("last_position_values", last_position_values)
+    print("previous_frequent_set_sequences, ", previous_frequent_set_sequences)
+    possibilities = []
+    for seq in previous_frequent_set_sequences:
+        for last_value in last_position_values:
+            tup = seq + last_value
+            possibilities.append(tup)
+    print("possibilities", possibilities)
+    sequencing_cs = []
+    for possibility in possibilities:
+        all_combinations = list(combinations(possibility, cs_seq_size-1))
+        occurrences_in_previous_fs = 0
+        for comb in all_combinations:
+            if comb not in previous_frequent_set_sequences:
+                break
+            else:
+                occurrences_in_previous_fs += 1
+        if occurrences_in_previous_fs == cs_seq_size:
+            sequencing_cs.append(possibility)
+
+    number_of_subjects = len(transformed_original_dataset)
+    sequencing_cs_with_sup = []
+    # get support:
+    for candidate in sequencing_cs:
+        number_of_occurrences = 0
+        for record in transformed_original_dataset:
+            index = 0
+            for sequence in record:
+                for elem in sequence:
+                    if candidate[index] == elem:
+                        index += 1
+                        break
+                if index == len(candidate):
+                    number_of_occurrences += 1
+                    break
+        sequencing_cs_with_sup.append((candidate, number_of_occurrences/number_of_subjects))
+
+    return sequencing_cs_with_sup
 
 
 def main():
@@ -196,9 +246,14 @@ def main():
     print("Mapped frequent sets", mapped_frequent_sets)
     transformed_original_dataset = get_transformed_original_dataset(dataset, mapped_frequent_sets)
     print("Transformed original dataset:", transformed_original_dataset)
-    sequencing_cs_2 = sequencing_create_candidate_set(transformed_original_dataset, mapped_frequent_sets, 2)
+    sequencing_cs_2 = sequencing_create_initial_candidate_set(transformed_original_dataset, mapped_frequent_sets, 2)
     print("Sequenced candidate set 2:", sequencing_cs_2)
-
+    sequencing_fs_2 = sequencing_get_frequent_set(sequencing_cs_2, min_sup)
+    print("Sequenced frequent set 2:", sequencing_fs_2)
+    sequencing_cs_3 = sequencing_create_candidate_set(transformed_original_dataset, sequencing_fs_2, 3)
+    print("Sequenced candidate set 3:", sequencing_cs_3)
+    sequencing_fs_3 = sequencing_get_frequent_set(sequencing_cs_3, min_sup)
+    print("Sequenced frequent set 3:", sequencing_fs_3)
 
 if __name__ == '__main__':
     main()
