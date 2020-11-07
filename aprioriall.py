@@ -1,4 +1,4 @@
-from itertools import combinations
+from itertools import combinations, product
 
 
 def conver_init_dataset_dict_to_list(initial_dataset_dict: {}) -> []:
@@ -129,6 +129,34 @@ def map_transformed_sequence(potential_sequences: [], mapped_frequent_sequences:
     return final_sequences
 
 
+def sequencing_create_candidate_set(transformed_original_dataset:[], mapped_frequent_sequences: [], cs_seq_size: int) -> []:
+    frequent_sequences_list = [x[2] for x in mapped_frequent_sequences]
+    print("frequent_sequences_list", frequent_sequences_list)
+    all_combinations_with_repeat = list(product(frequent_sequences_list, repeat=cs_seq_size))
+    print("All combinations with repeat", all_combinations_with_repeat)
+    print("transformed roiginal", transformed_original_dataset)
+    sequencing_cs = []
+    number_of_subjects = len(transformed_original_dataset)
+    for combination in all_combinations_with_repeat:
+        print("--------- checked ombination -----", combination)
+        number_of_occurrences = 0
+        for record in transformed_original_dataset:
+            index = 0
+            print("record", record)
+            for sequence in record:
+                print("sequence", sequence)
+                for elem in sequence:
+                    print("elem:", elem)
+                    if combination[index] == elem:
+                        index += 1
+                        break
+                if index == len(combination):
+                    number_of_occurrences += 1
+                    break
+        sequencing_cs.append((combination, number_of_occurrences/number_of_subjects))
+    return sequencing_cs
+
+
 def main():
     """ dataset's elements are tuples, where first index of tuple is id of subject (e.g. id of client), and second index
     is list of sequences, where each sequence is a tuple.
@@ -168,6 +196,8 @@ def main():
     print("Mapped frequent sets", mapped_frequent_sets)
     transformed_original_dataset = get_transformed_original_dataset(dataset, mapped_frequent_sets)
     print("Transformed original dataset:", transformed_original_dataset)
+    sequencing_cs_2 = sequencing_create_candidate_set(transformed_original_dataset, mapped_frequent_sets, 2)
+    print("Sequenced candidate set 2:", sequencing_cs_2)
 
 
 if __name__ == '__main__':
