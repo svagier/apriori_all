@@ -159,7 +159,6 @@ def sequencing_get_frequent_set(sequencing_candidate_set: [], min_support: float
 
 
 def sequencing_create_candidate_set(transformed_original_dataset: [], previous_frequent_set: [], cs_seq_size: int) -> []:
-    print("previous_frequent_set",previous_frequent_set)
     # get unique values from last positions from sequences in previous_frequent_set:
     last_position_values = []
     previous_frequent_set_sequences = []
@@ -167,14 +166,11 @@ def sequencing_create_candidate_set(transformed_original_dataset: [], previous_f
         previous_frequent_set_sequences.append(seq[0])
         if seq[0][cs_seq_size-2] not in last_position_values:
             last_position_values.append((seq[0][-1],))
-    print("last_position_values", last_position_values)
-    print("previous_frequent_set_sequences, ", previous_frequent_set_sequences)
     possibilities = []
     for seq in previous_frequent_set_sequences:
         for last_value in last_position_values:
             tup = seq + last_value
             possibilities.append(tup)
-    print("possibilities", possibilities)
     sequencing_cs = []
     for possibility in possibilities:
         all_combinations = list(combinations(possibility, cs_seq_size-1))
@@ -207,6 +203,51 @@ def sequencing_create_candidate_set(transformed_original_dataset: [], previous_f
     return sequencing_cs_with_sup
 
 
+def apriori_all(dataset: [], min_sup: float):
+    print("Original dataset:\n", dataset)
+    candidate_set = get_initial_cs(dataset)
+    all_frequent_sets = []
+    print("\nInitial candidate set (with support):\n", candidate_set)
+    counter = 1
+    while len(candidate_set):
+        frequent_set = get_frequent_set(candidate_set, min_sup)
+        print("\nFrequent set {} (with support):\n".format(counter), frequent_set)
+        if len(frequent_set):
+            all_frequent_sets.append(frequent_set)
+            counter += 1
+            candidate_set = create_candidate_set(dataset, frequent_set, counter)
+            print("\nCandidate set {} (with support):\n".format(counter), candidate_set)
+            if not len(candidate_set):
+                counter -= 1        # this may happen only once
+        else:
+            break
+
+    # Mapping:
+    mapped_frequent_sets = map_frequent_sets(all_frequent_sets)
+    print("\nMapped frequent sets (with support and new mapped value):\n", mapped_frequent_sets)
+
+    # Transforming:
+    transformed_original_dataset = get_transformed_original_dataset(dataset, mapped_frequent_sets)
+    print("\nTransformed original dataset:\n", transformed_original_dataset)
+
+    # Sequencing:
+    sequencing_candidate_set = sequencing_create_initial_candidate_set(transformed_original_dataset, mapped_frequent_sets, counter)
+    sequencing_frequent_set = ['initial_value (will be overwritten during first iteration']
+    while len(sequencing_candidate_set) and len(sequencing_frequent_set):
+        sequencing_frequent_set = sequencing_get_frequent_set(sequencing_candidate_set, min_sup)
+        print("\nSequenced frequent set {} (with support):\n".format(counter), sequencing_frequent_set)
+        if len(sequencing_frequent_set):
+            counter += 1
+            sequencing_candidate_set = sequencing_create_candidate_set(transformed_original_dataset, sequencing_frequent_set, 3)
+            print("\nSequenced candidate set {} (with support):\n".format(counter), sequencing_candidate_set)
+            if not len(sequencing_candidate_set):
+                print("------ Sequenced candidate set {} is empty. Algorithm is ending. ------".format(counter))
+                return
+        else:
+            print("------ Sequenced frequent set {} is empty. Algorithm is ending. ------".format(counter))
+            return
+
+
 def main():
     """ dataset's elements are tuples, where first index of tuple is id of subject (e.g. id of client), and second index
     is list of sequences, where each sequence is a tuple.
@@ -220,40 +261,9 @@ def main():
                 ("4", [('A',), ('C', 'D', 'E'), ('A',)]),
                 ("5", [('A',)])
     ]
-
-    # dataset = [
-    #     ("105", [(30,), (90,)]),
-    #     ("106", [(10, 20), (30,), (40, 60, 70)]),
-    #     ("200", [(30, 50, 70)]),
-    #     ("220", [(30,), (40, 60), (90,)]),
-    #     ("300", [(90,)]),
-    # ]
-
     min_sup = 0.25
+    apriori_all(dataset, min_sup)
 
-    print("Original dataset:\n", dataset)
-
-    initial_candidate_set = get_initial_cs(dataset)
-    print("\nInitial candidate set:", initial_candidate_set)
-    fs_1 = get_frequent_set(initial_candidate_set, min_sup)
-    print("\nFrequent set 1: ", fs_1)
-    cs_2 = create_candidate_set(dataset, fs_1, 2)
-    print("\nCandidate set 2: ", cs_2)
-    fs_2 = get_frequent_set(cs_2, min_sup)
-    print("\nFrequent set 2: ", fs_2)
-    all_frequent_sets = [fs_1, fs_2]
-    mapped_frequent_sets = map_frequent_sets(all_frequent_sets)
-    print("Mapped frequent sets", mapped_frequent_sets)
-    transformed_original_dataset = get_transformed_original_dataset(dataset, mapped_frequent_sets)
-    print("Transformed original dataset:", transformed_original_dataset)
-    sequencing_cs_2 = sequencing_create_initial_candidate_set(transformed_original_dataset, mapped_frequent_sets, 2)
-    print("Sequenced candidate set 2:", sequencing_cs_2)
-    sequencing_fs_2 = sequencing_get_frequent_set(sequencing_cs_2, min_sup)
-    print("Sequenced frequent set 2:", sequencing_fs_2)
-    sequencing_cs_3 = sequencing_create_candidate_set(transformed_original_dataset, sequencing_fs_2, 3)
-    print("Sequenced candidate set 3:", sequencing_cs_3)
-    sequencing_fs_3 = sequencing_get_frequent_set(sequencing_cs_3, min_sup)
-    print("Sequenced frequent set 3:", sequencing_fs_3)
 
 if __name__ == '__main__':
     main()
